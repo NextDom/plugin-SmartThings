@@ -1,0 +1,48 @@
+{
+  "commands": [
+    {
+      "name": "Connecté(e)",
+      "type": "info",
+      "subtype": "binary",
+      "isVisible": 1,
+      "isHistorized": 0,
+      "unite": "",
+      "configuration": {
+        "repeatEventManagement" : "never",
+        "category": "CommonInfo"
+      },
+      "logicalId": "connected"
+    },
+    {
+      "name": "Lancer",
+      "type": "action",
+      "subtype": "other",
+      "isVisible": 1,
+      "isHistorized": 0,
+      "configuration": {
+        "category": "Command"
+      },
+      "logicalId": "start"
+    },
+    {
+      "name": "Arrêter",
+      "type": "action",
+      "subtype": "other",
+      "isVisible": 1,
+      "isHistorized": 0,
+      "configuration": {
+        "path": "programs/active",
+        "category": "Command"
+      },
+      "logicalId": "DELETE::StopActiveProgram"
+    },
+    {
+      "name": "Rafraichir",
+      "type": "action",
+      "subtype": "other",
+      "isVisible": 1,
+      "isHistorized": 0,
+      "logicalId": "refresh"
+    }
+  ]
+}

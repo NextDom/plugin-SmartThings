@@ -1,0 +1,25 @@
+{
+  "commands": [
+    {
+      "name": "Connecté(e)",
+      "type": "info",
+      "subtype": "binary",
+      "isVisible": 1,
+      "isHistorized": 0,
+      "unite": "",
+      "configuration": {
+        "repeatEventManagement" : "never",
+        "category": "CommonInfo"
+      },
+      "logicalId": "connected"
+    },
+    {
+      "name": "Rafraichir",
+      "type": "action",
+      "subtype": "other",
+      "isVisible": 1,
+      "isHistorized": 0,
+      "logicalId": "refresh"
+    }
+  ]
+}

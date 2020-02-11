@@ -1,0 +1,58 @@
+<?php
+
+/* This file is part of Jeedom.
+ *
+ * Jeedom is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Jeedom is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+try {
+	require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
+	include_file('core', 'authentification', 'php');
+
+	if (!isConnect('admin')) {
+		throw new Exception(__('401 - Accès non autorisé', __FILE__));
+	}
+
+	ajax::init();
+
+	if (init('action') == 'loginSmartThings') {
+		if (network::getUserLocation() == 'internal') {
+			throw new Exception(__("Connexion impossible : connectez vous à votre Jeedom par l'accès externe pas par l'accès interne", __FILE__));
+		}
+		if (config::byKey('demo_mode','smartthings')) {
+			smartthings::authDemoRequest();
+			ajax::success();
+		} else {
+			$url = smartthings::authRequest();
+			ajax::success(array('redirect' => $url));
+		}
+	}
+
+	if (init('action') == 'syncSmartThings') {
+		smartthings::syncSmartThings();
+		ajax::success();
+	}
+
+	if (init('action') == 'deleteEqLogic') {
+		smartthings::deleteEqLogic();
+		ajax::success();
+	}
+
+
+	throw new Exception(__('Aucune méthode correspondante à : ', __FILE__) . init('action'));
+	/*	   * *********Catch exeption*************** */
+} catch (Exception $e) {
+	ajax::error(displayExeption($e), $e->getCode());
+}
+?>
