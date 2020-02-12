@@ -1,9 +1,9 @@
 {
 	"id" : "smartthings",
-	"name" : "SmartThings (Samsung)",
+	"name" : "SmartThings (Alpha Release)",
 	"description" : "Plugin permettant de récupérer les informations des appareils connectes au service SmartThings de Samsung (https://www.smartthings.com)",
 	"licence" : "AGPL",
-        "installation" : " IMPORTANT : <br>   1 - Votre installation Jeedom doit etre accessible de l'exterrieur (https)<br>   2 - In est necessaire de creer un Token sur le site Samsung SmartThings",
+        "installation" : " IMPORTANT : <br>   1 - CETTE RELEASE EST ALPHA RELEASE !!!! <br>   2 - In est necessaire de creer un Token sur le site Samsung SmartThings",
 	"author" : "Fefeld",
 	"require" : "3.3",
 	"category" : "devicecommunication",

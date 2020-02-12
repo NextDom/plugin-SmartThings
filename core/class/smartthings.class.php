@@ -1,5 +1,7 @@
 <?php
-
+## "capabilities":[{"id":"switch","version":1},{"id":"switchLevel","version":1},{"id":"colorControl","version":1},{"id":"colorTemperature","version":1},{"id":"refresh","version":1},{"id":"healthCheck","version":1}]}],
+#
+#
 /* This file is part of Jeedom.
  *
  * Jeedom is free software: you can redistribute it and/or modify
@@ -219,50 +221,70 @@ class smartthings extends eqLogic {
 		$json_capabilities = json_decode($string_json, true);
 		return $json_capabilities[Capabilities];
 	}
+	
+	private static function SetCmd($LocaleqLogic,$key,$val,$type) {
+	       log::add('smartthings', 'debug', "SetCmd  - ".$key);
+	       $cmd = $LocaleqLogic->getCmd(null, $key);
+	       if ( ! is_object($cmd) ) {
+	            $cmd = new smartthingsCmd();
+	            $cmd->setName($key);
+	            $cmd->setEqLogic_id($LocaleqLogic->getId());
+	            $cmd->setType($type);
+	            $cmd->setUnite("");
+	            $cmd->setIsHistorized(0);
+	            $cmd->setLogicalId($key);
+	            // $cmd->setCollectDate('');
+	            ##if ( $listValue != "" )
+	            ##{
+	            ##$cmd->setConfiguration('listValue', $listValue);
+	            ##}
+	            $cmd->setDisplay('invertBinary',$invertBinary);
+	            $cmd->setConfiguration('maxValue',$maxValue);
+		    $cmd->setDisplay('generic_type', "GENERIC_INFO");
+		    $datatype=$val[schema][properties][value][type];
+		    if ($datatype == "" ) {
+			    $datatype="string";
+		    }
+
+	       	    if (in_array($datatype , array("number","integer"))){
+	       		$SubType="numeric";
+	       		$template_dashboard = "jauge";
+	       		$template_mobile = "jauge";
+	       	    }
+	       	    if (in_array($datatype , array("string","array"))){
+	       		$SubType="string";
+	       		$template_dashboard = "badge";
+	       		$template_mobile = "badge";
+	       	    }
+	       	    $cmd->setSubType($SubType);
+	       	    $cmd->setTemplate('dashboard', $template_dashboard);
+	       	    $cmd->setTemplate('mobile', $template_mobile);
+	       	    log::add('smartthings', 'debug', "saving =  ".$key);
+	       	    $cmd->save();
+	       	    log::add('smartthings', 'debug', $key." saved");
+	       	}
+	}
 
 	private static function SetCapabilitiesAttributesAndCommands($LocaleqLogic,$json_capabilities,$id,$version) {
+		log::add('smartthings', 'debug', "SetCapabilitiesAttributesAndCommands  - ".$id);
 		foreach($json_capabilities as $capability) {
-		    if (($capability[id] == $id) && ($capability[version] == $version)){
-			    foreach($capability[attributes] as $key => $val) {
-				
-				$cmd = $LocaleqLogic->getCmd(null, $key);
-				if ( ! is_object($cmd) ) {
-				     $cmd = new smartthingsCmd();
-				     $cmd->setName($key);
-				     $cmd->setEqLogic_id($LocaleqLogic->getId());
-				     $cmd->setType("info");
-				     $cmd->setSubType($SubType);
-				     $cmd->setUnite("");
-				     $cmd->setIsHistorized(0);
-				     $cmd->setLogicalId($key);
-				     // $cmd->setCollectDate('');
-				     ##if ( $listValue != "" )
-				     ##{
-				     ##$cmd->setConfiguration('listValue', $listValue);
-				     ##}
-				     $cmd->setDisplay('invertBinary',$invertBinary);
-				     $cmd->setConfiguration('maxValue',$maxValue);
-				     $cmd->setDisplay('generic_type', "GENERIC_INFO");
-				     if (in_array($val[schema][properties][value][type] , array("number","integer"))){
-				     	$SubType="numeric";
-				     	$template_dashboard = "jauge";
-				     	$template_mobile = "jauge";
+		       if (($capability[id] == $id) && ($capability[version] == $version)){
+		           log::add('smartthings', 'debug', "Seting up cmd  Main loop for ".$capability[id]);
+			   foreach($capability[attributes] as $key => $val) {
+		                log::add('smartthings', 'debug', "Seting up cmd  - ".$key);
+		                self:: SetCmd($LocaleqLogic,$key,$val,"info");
+			   }
+			   foreach($capability[commands] as $key => $val) {
+		               log::add('smartthings', 'debug', "Seting up Action - ".$key);
+			       foreach($val[arguments] as $arguments) {
+				     if (in_array($arguments[schema][type] , array("string","number","integer"))){
+				            log::add('smartthings', 'debug', "arguments - ".$arguments[name]." type =".$arguments[schema][type]);
+				            self:: SetCmd($LocaleqLogic,$key,$val,"action");
+				     } else {
+		                           log::add('smartthings', 'info', "[ERROR]== Action ".$key."/".$arguments[name]." not yet supported");
 				     }
-				     if (in_array($val[schema][properties][value][type] , array("string","array"))){
-				     	$SubType="string";
-				     	$template_dashboard = "badge";
-				     	$template_mobile = "badge";
-				     }
-				     if ($key == "switch"){
-				         $cmd->setType("action");
-				         $cmd->setSubType("select");
-				         $cmd->setDisplay('generic_type', "GENERIC_ACTION");
-				     }
-				     $cmd->setTemplate('dashboard', $template_dashboard);
-				     $cmd->setTemplate('mobile', $template_mobile);
-				     $cmd->save();
-				}
-			     }
+			       }
+			   }
 		    }
 		}
 		return array(null,null);
@@ -289,11 +311,13 @@ class smartthings extends eqLogic {
 
         }
 	public static function DefineDevice($deviceId){
+		log::add('smartthings', 'debug', "THIS FONCTION IS NOT CALLED");
 		$device_url=self::API_URL_DEVICES."/".$deviceId;
 		$devicecmd = self::request($device_url, null, 'GET', array());
 		$devicecmd = json_decode($devicecmd, true);
 		$status_url=self::API_URL_DEVICES."/".$deviceId."/status";
 		$devicestatus = self::request($status_url, null, 'GET', array());
+		log::add('smartthings', 'debug', "devicestatus - ".$devicestatus);
 		$devicestatus = json_decode($devicestatus, true);
 		$Cmd=[];
 		foreach($devicecmd['components'] as $components) {
@@ -314,12 +338,11 @@ class smartthings extends eqLogic {
 	private static function GetDevices($RoomName,$CapabilitiesDef) {
                 /* Get List of devices                           */
                 /* Create Object if required                     */
-		log::add('smartthings', 'debug',"---Début de synchronisation des Devices ----------");
-		
 		$response = self::request(self::API_URL_DEVICES, null, 'GET', array());
+	log::add('smartthings', 'debug',"response : ".$response);
 		$response = json_decode($response, true);
+
 		foreach($response['items'] as $device) {
-			log::add('smartthings', 'debug',"--Devive : ".$device[name]);
 			// Vérification que l'appareil n'est pas déjà créé.
 			$eqLogic = eqLogic::byLogicalId($device[deviceId], 'smartthings');
 			if (is_object($eqLogic)) {
@@ -339,16 +362,13 @@ class smartthings extends eqLogic {
 				$eqLogic->setConfiguration('deviceId', $device['deviceId']);
 				$eqLogic->setConfiguration('roomId', $device['roomId']);
 				$eqLogic->setConfiguration('roomName', $RoomName[$device['roomId']]);
-			        log::add('smartthings', 'debug',"Save eqLogic : ".$device[label]);
 				$eqLogic->save();
 				//self::DefineDevice($device['deviceId']);
 			        ##log::add('smartthings', 'debug',"NOT Save eqLogic : ".$device[label]);
-			        log::add('smartthings', 'debug',"Save roomName : ".$RoomName[$device[label]]);
 		                foreach($device['components'] as $components) {
-		                   log::add('smartthings', 'debug', "Component  - ".$components[id]);
 				   foreach($components[capabilities] as $capability) {
+		                           log::add('smartthings', 'debug', "-------Now Setting up Cmd : ".$capability[id]);
 					   list($lookupInfo,$lookupCmd) = self::SetCapabilitiesAttributesAndCommands($eqLogic,$CapabilitiesDef,$capability[id],$capability[version]);
-					   self::GenerateInfoCmd($lookupInfo);
 				   }
 			        }
 
